@@ -99,6 +99,8 @@ func (conn *RedshiftConn) getS3Props() []string {
 	awsToken := conn.GetProp("AWS_SESSION_TOKEN")
 	awsRole := conn.GetProp("AWS_ROLE_ARN")
 
+	hasBaseCreds := (awsID != "" && awsKey != "") || awsToken != ""
+
 	if awsID != "" {
 		s3Props = append(s3Props, "ACCESS_KEY_ID="+awsID)
 	}
@@ -108,12 +110,15 @@ func (conn *RedshiftConn) getS3Props() []string {
 	if awsToken != "" {
 		s3Props = append(s3Props, "SESSION_TOKEN="+awsToken)
 	}
-	if awsRole != "" {
+
+	// ROLE_ARN is only useful for S3 client if we have base creds to assume from.
+	// Otherwise, USE_ENVIRONMENT will use instance metadata (EC2/ECS IAM role).
+	if awsRole != "" && hasBaseCreds {
 		s3Props = append(s3Props, "ROLE_ARN="+awsRole)
 	}
 
-	// If no AWS credentials are provided, instruct S3 client to use environment credentials
-	if awsID == "" && awsKey == "" && awsToken == "" && awsRole == "" {
+	// Use environment/instance credentials when no base credentials provided
+	if !hasBaseCreds {
 		s3Props = append(s3Props, "USE_ENVIRONMENT=true")
 	}
 	return s3Props
@@ -147,6 +152,8 @@ func (conn *RedshiftConn) makeCopyCredentialString() (cred string) {
 		"aws_session_token", AwsSessionToken,
 		"aws_role_arn", AwsRole,
 	)
+
+	g.Debug("makeCopyCredentialString: role=%s, cred='%s'", AwsRole, strings.TrimSpace(cred))
 
 	return strings.TrimSpace(cred)
 }
