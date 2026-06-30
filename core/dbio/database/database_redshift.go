@@ -452,6 +452,11 @@ func (conn *RedshiftConn) CopyFromS3(tableFName, s3Path string, columns iop.Colu
 		err = g.Error("Need to provide AWS credentials: either 'AWS_ACCESS_KEY_ID' + 'AWS_SECRET_ACCESS_KEY', 'AWS_SESSION_TOKEN', or 'AWS_ROLE_ARN'")
 		return
 	}
+
+	if AwsRole != "" {
+		g.Debug("using IAM role for Redshift COPY: %s", AwsRole)
+	}
+
 	credentialExpr := conn.makeCopyCredentialString()
 
 	tgtColumns := conn.Template().QuoteNames(columns.Names()...)
