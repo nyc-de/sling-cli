@@ -97,7 +97,6 @@ func (conn *RedshiftConn) getS3Props() []string {
 	awsID := conn.GetProp("AWS_ACCESS_KEY_ID")
 	awsKey := conn.GetProp("AWS_SECRET_ACCESS_KEY")
 	awsToken := conn.GetProp("AWS_SESSION_TOKEN")
-	awsRole := conn.GetProp("AWS_ROLE_ARN")
 
 	if awsID != "" {
 		s3Props = append(s3Props, "ACCESS_KEY_ID="+awsID)
